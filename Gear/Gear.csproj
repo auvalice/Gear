@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <Version>0.0.1</Version>
+        <FileVersion>0.0.1</FileVersion>
+        <AssemblyVersion>0.0.1.0</AssemblyVersion>
+        <OutputType>Library</OutputType>
+        <IsPackable>true</IsPackable>
+        <PackageId>Gear</PackageId>
+        <BBPath>$(ProjectDir)..\..\BrackeysBot\BrackeysBot\bin\Debug\net6.0\</BBPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="config.json" />
+        <EmbeddedResource Include="config.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\BrackeysBot.API\BrackeysBot.API\BrackeysBot.API.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="wwwroot\*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4" />
+    </ItemGroup>
+
+    <Target Name="CopyDLLToBB" AfterTargets="Build" Condition="Exists($(BBPath))">
+        <Copy SourceFiles="$(OutputPath)Gear.dll" DestinationFolder="$(BBPath)plugins" />
+        <Copy SourceFiles="$(OutputPath)Gear.dll" DestinationFolder="$(BBPath)libraries\managed" />
+    </Target>
+
+</Project>
