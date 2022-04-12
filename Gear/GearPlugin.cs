@@ -55,7 +55,7 @@ public sealed class GearPlugin : MonoPlugin
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        Startup.ConfigureServices(services);
+        // Startup.ConfigureServices(services);
         base.ConfigureServices(services);
     }
 }
