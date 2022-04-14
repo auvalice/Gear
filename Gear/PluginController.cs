@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Gear;
 
@@ -14,8 +15,25 @@ public class PluginController : ControllerBase
 
     [HttpGet]
     [Route("/api")]
-    public JsonResult Index()
+    public JsonResult Get()
     {
-        return new JsonResult("{data: [\"OK!\"]");
+        return new JsonResult(new {data = "OK"});
+    }
+
+    [HttpGet]
+    [Route("/api/plugins")]
+    public JsonResult Plugins()
+    {
+        var loadedPlugins = _pluginService.GetLoadedPlugins();
+        var pluginNames = loadedPlugins.Select(plugin => plugin.Name).ToArray();
+        return new JsonResult(new {plugins = pluginNames});
+    }
+
+    [HttpGet]
+    [Route("/api/configs")]
+    public JsonResult Configs()
+    {
+        var pluginConfigs = _pluginService.GetConfigs();
+        return new JsonResult(new {configs = pluginConfigs});
     }
 }

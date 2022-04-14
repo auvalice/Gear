@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 using BrackeysBot.API.Plugins;
@@ -24,38 +25,53 @@ namespace Gear;
 [PluginDescription("Configure other plugins via a web interface")]
 public sealed class GearPlugin : MonoPlugin
 {
-    private IHost _host;
+    public static string ConfigSchema = @"
+{
+  ""$schema"": ""https://json-schema.org/draft/2020-12/schema"",
+    ""$id"": ""https://example.com/product.schema.json"",
+    ""title"": ""Gear-Configuration"",
+    ""description"": ""JSON Schema for the Gear BrackeysBot plugin"",
+    ""type"": ""object"",
+    ""properties"": {
+        ""runOnLoad"": {
+            ""type"": ""boolean"",
+            ""description"": ""Whether the plugin should be enabled on bot startup""
+        }
+    },
+""required"": [
+""runOnLoad""
+    ]
+}
+";
+    
+    private WebApplication? _host;
 
     /// <inheritdoc />
     protected override Task OnLoad()
     {
-        _host = CreateHostbuilder().Build();
-        return Task.WhenAll(_host.StartAsync(), base.OnLoad());
+        var builder = WebApplication.CreateBuilder();
+        BindServices(builder);
+        _host = builder.Build();
+        _host.MapControllers();
+        return base.OnLoad();
     }
 
     /// <inheritdoc />
-    protected override Task OnUnload()
+    protected override Task OnEnable()
     {
-        return Task.WhenAll(_host.StopAsync(), base.OnUnload());
+        return Task.WhenAll(_host!.StartAsync(), base.OnLoad());
     }
 
-    public override void Dispose()
+    /// <inheritdoc />
+    protected override Task OnDisable()
     {
-        _host.Dispose();
-        base.Dispose();
+        return Task.WhenAll(_host!.StopAsync(), base.OnUnload());
     }
 
-    static IHostBuilder CreateHostbuilder()
+    private void BindServices(WebApplicationBuilder builder)
     {
-        return Host.CreateDefaultBuilder()
-            .ConfigureWebHost(host =>
-                host.UseKestrel()
-                    .UseStartup<Startup>());
-    }
-
-    protected override void ConfigureServices(IServiceCollection services)
-    {
-        // Startup.ConfigureServices(services);
-        base.ConfigureServices(services);
+        builder.Services.AddRouting();
+        builder.Services.AddMvc().AddApplicationPart(typeof(GearPlugin).Assembly).AddControllersAsServices();
+        builder.Services.AddSingleton<IPluginService, PluginService>();
     }
 }

@@ -1,0 +1,16 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/product.schema.json",
+  "title": "Gear-Configuration",
+  "description": "JSON Schema for the Gear BrackeysBot plugin",
+  "type": "object",
+  "properties": {
+    "runOnLoad": {
+      "type": "boolean",
+      "description": "Whether the plugin should be enabled on bot startup"
+    }
+  },
+  "required": [
+    "runOnLoad"
+  ]
+}
