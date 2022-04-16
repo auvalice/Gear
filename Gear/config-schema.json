@@ -1,0 +1,41 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://auvalice.github.io/gear/config-schema.json",
+  "title": "Gear-Configuration",
+  "description": "JSON Schema for the Gear BrackeysBot plugin",
+  "type": "object",
+  "properties": {
+    "discord": {
+      "$ref": "#/$defs/discord"
+    },
+    "gear": {
+      "$ref": "#/$defs/gear"
+    }
+  },
+  "required": [
+    "runOnLoad"
+  ],
+  "$defs": {
+    "discord": {
+      "description": "General settings from BrackeysBot. Should always be available.",
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "prefix": {
+          "type": "string"
+        }
+      }
+    },
+    "gear": {
+      "description": "Settings for Gear. You can define your own settings that have to be read from the configuration JSON here.",
+      "type": "object",
+      "properties": {
+        "runOnLoad": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

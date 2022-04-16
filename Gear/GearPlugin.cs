@@ -1,13 +1,13 @@
-﻿using System;
-using System.ComponentModel.Design;
-using System.Linq;
+﻿using System.Collections.Immutable;
+using System.IO;
 using System.Threading.Tasks;
 using BrackeysBot.API.Plugins;
+using Gear.Extensions;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.FileProviders;
 
 namespace Gear;
 
@@ -25,53 +25,56 @@ namespace Gear;
 [PluginDescription("Configure other plugins via a web interface")]
 public sealed class GearPlugin : MonoPlugin
 {
-    public static string ConfigSchema = @"
-{
-  ""$schema"": ""https://json-schema.org/draft/2020-12/schema"",
-    ""$id"": ""https://example.com/product.schema.json"",
-    ""title"": ""Gear-Configuration"",
-    ""description"": ""JSON Schema for the Gear BrackeysBot plugin"",
-    ""type"": ""object"",
-    ""properties"": {
-        ""runOnLoad"": {
-            ""type"": ""boolean"",
-            ""description"": ""Whether the plugin should be enabled on bot startup""
-        }
-    },
-""required"": [
-""runOnLoad""
-    ]
-}
-";
-    
     private WebApplication? _host;
 
     /// <inheritdoc />
     protected override Task OnLoad()
     {
-        var builder = WebApplication.CreateBuilder();
-        BindServices(builder);
-        _host = builder.Build();
-        _host.MapControllers();
+        _host = WebApplication.CreateBuilder()
+            .ConfigureServices(ServiceConfiguration)
+            .Build();
+        
+        ConfigureHost(_host);
+
         return base.OnLoad();
     }
 
     /// <inheritdoc />
     protected override Task OnEnable()
     {
-        return Task.WhenAll(_host!.StartAsync(), base.OnLoad());
+        return _host!.StartAsync();
     }
 
     /// <inheritdoc />
     protected override Task OnDisable()
     {
-        return Task.WhenAll(_host!.StopAsync(), base.OnUnload());
+        return _host!.StopAsync();
     }
 
-    private void BindServices(WebApplicationBuilder builder)
+    private void ServiceConfiguration(IServiceCollection services)
     {
-        builder.Services.AddRouting();
-        builder.Services.AddMvc().AddApplicationPart(typeof(GearPlugin).Assembly).AddControllersAsServices();
-        builder.Services.AddSingleton<IPluginService, PluginService>();
+        services.AddRouting();
+        services.AddControllers().AddApplicationPart(typeof(GearPlugin).Assembly);
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+        });
+        services.AddSingleton<IPluginService, PluginService>();
+    }
+
+    private void ConfigureHost(WebApplication host)
+    {
+        host.MapControllers();
+        host.UseDefaultFiles();
+        host.UseStaticFiles();
+        host.UseApiVersioning();
+        host.UseRouting();
+        host.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute("api/v1", "api/v1/{controller}/{action}");
+
+        });
     }
 }

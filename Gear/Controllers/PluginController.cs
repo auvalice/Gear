@@ -1,9 +1,11 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gear;
+namespace Gear.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/plugins")]
 public class PluginController : ControllerBase
 {
     private IPluginService _pluginService;
@@ -13,27 +15,12 @@ public class PluginController : ControllerBase
         _pluginService = pluginService;
     }
 
+    [MapToApiVersion("1.0")]
     [HttpGet]
-    [Route("/api")]
-    public JsonResult Get()
-    {
-        return new JsonResult(new {data = "OK"});
-    }
-
-    [HttpGet]
-    [Route("/api/plugins")]
     public JsonResult Plugins()
     {
         var loadedPlugins = _pluginService.GetLoadedPlugins();
         var pluginNames = loadedPlugins.Select(plugin => plugin.Name).ToArray();
         return new JsonResult(new {plugins = pluginNames});
-    }
-
-    [HttpGet]
-    [Route("/api/configs")]
-    public JsonResult Configs()
-    {
-        var pluginConfigs = _pluginService.GetConfigs();
-        return new JsonResult(new {configs = pluginConfigs});
     }
 }
